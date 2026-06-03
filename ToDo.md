@@ -2,9 +2,9 @@
 
 Wherever necessary instruct me on the steps to create / setup any necessary elements inside the Godot Editor. However, if possible, please edit scripts and configuration files directly as you see fit to implement our finished, polished 90s style space shooter game, with visually stunning particle fx and dynamic lighting.
 
-- [ ] 
-- [ ] don't fully pause the game between levels: Instead just display the next level story/message and don't spawn any new enemies and set a timer. The player should be able to continue flying and shooting in the stars. Once the title screen clears start spawning the next wave of enemies.
-- [ ] the player bullet is currently a sprite, but it doesn't match. We should switch it to use our particle system so it matches the visual fx (keep the same green color)
+- Don't start the transition to the next level until all of the enemies are cleared from the screen.
+- The player and enemy bullets currently seem like a stream of tiny particles making them hard to see and mismatched in resolution with the rest of the game. They should be far fewer particles, larger and highly concentrated in a small ball or laser bolt shape.
+- The bullet impact particle fx should include some particles that match the bullet color
 
 
 

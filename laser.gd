@@ -13,10 +13,12 @@ func _ready() -> void:
 		$Sprite2D.hide()
 		
 	var particles = CPUParticles2D.new()
-	particles.amount = 15
-	particles.lifetime = 0.2
-	particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
-	particles.emission_rect_extents = Vector2(4, 12)
+	particles.amount = 5
+	particles.lifetime = 0.1
+	particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	particles.emission_sphere_radius = 3.0
+	particles.scale_amount_min = 4.0
+	particles.scale_amount_max = 6.0
 	particles.gravity = Vector2(0, 0)
 	particles.color = Color.GREEN
 	

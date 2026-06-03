@@ -62,12 +62,28 @@ func _ready() -> void:
 	# Setup Healthbar
 	if has_node("UI/Healthbar"):
 		var hb = $UI/Healthbar
-		hb.texture_under = load("res://assets/images/healthbar.png")
-		hb.texture_progress = load("res://assets/images/healthbar.png")
-		hb.tint_under = Color(0.2, 0.2, 0.2)
+		var img = Image.create(200, 20, false, Image.FORMAT_RGBA8)
+		img.fill(Color.WHITE)
+		var tex = ImageTexture.create_from_image(img)
+		hb.texture_under = tex
+		hb.texture_progress = tex
+		hb.tint_under = Color.RED
 		hb.tint_progress = Color.GREEN
 		hb.position = Vector2(20, 20)
-		hb.scale = Vector2(3, 3)
+		hb.scale = Vector2(1, 1)
+		
+	var vp = get_viewport_rect().size
+	if has_node("UI/ScoreLabel"):
+		score_label.position = Vector2(vp.x - 200, 20)
+	if has_node("UI/LevelLabel"):
+		level_label.position = Vector2(vp.x - 200, 50)
+	if has_node("UI/MissileAmmoLabel"):
+		missile_label.position = Vector2(20, 60)
+	if has_node("UI/BombAmmoLabel"):
+		bomb_label.position = Vector2(20, 90)
+		
+	if has_node("UI/FadeOverlay"):
+		$UI/FadeOverlay.hide()
 
 func _setup_starfield():
 	var bg = ColorRect.new()
@@ -100,8 +116,8 @@ func _setup_starfield():
 		var speed = 100.0 + (i * 200.0)
 		stars.initial_velocity_min = speed * 0.8
 		stars.initial_velocity_max = speed * 1.2
-		stars.scale_amount_min = (i + 1) * 1.0
-		stars.scale_amount_max = (i + 1) * 2.0
+		stars.scale_amount_min = (i + 1) * 0.5
+		stars.scale_amount_max = (i + 1) * 1.0
 		stars.lifetime = (vp_size.y + 200) / speed
 		stars.preprocess = stars.lifetime
 		stars.position = Vector2(vp_size.x / 2.0, -50)
@@ -109,9 +125,10 @@ func _setup_starfield():
 		
 		# Randomize star glow using a gradient with HDR values
 		var grad = Gradient.new()
-		grad.add_point(0.0, Color(0.4, 0.4, 0.4)) # Dim, no glow
-		grad.add_point(0.8, Color(0.8, 0.8, 0.8)) # Normal, no glow
-		grad.add_point(1.0, Color(1.5, 1.5, 1.2)) # Bright, glows!
+		grad.add_point(0.0, Color(0.1, 0.1, 0.1)) # Very dim
+		grad.add_point(0.5, Color(0.4, 0.4, 0.4)) # Dim
+		grad.add_point(0.9, Color(0.7, 0.7, 0.7)) # Normal
+		grad.add_point(1.0, Color(1.2, 1.2, 1.0)) # Bright, glows!
 		stars.color_initial_ramp = grad
 		
 		add_child(stars)
@@ -200,10 +217,12 @@ func play_impact(pos: Vector2, target_color: Color, laser_color: Color):
 	particles.initial_velocity_max = 150.0
 	particles.scale_amount_min = 2.0
 	particles.scale_amount_max = 4.0
+	particles.gravity = Vector2(0, 0)
 	
 	var grad = Gradient.new()
+	grad.interpolation_mode = Gradient.GRADIENT_INTERPOLATE_CONSTANT
 	grad.add_point(0.0, target_color)
-	grad.add_point(1.0, laser_color)
+	grad.add_point(0.5, laser_color)
 	particles.color_initial_ramp = grad
 	
 	particles.global_position = pos
@@ -233,9 +252,14 @@ func _process(delta: float) -> void:
 	if global:
 		level_timer += delta
 		if level_timer >= level_duration:
-			level_timer = 0.0
-			global.level += 1
-			_start_level_transition(global.level)
+			var enemies_left = 0
+			for enemy in $Enemies.get_children():
+				if enemy != gazer_template and enemy != asteroid_template and enemy != enemy_ship_template and not enemy.is_queued_for_deletion():
+					enemies_left += 1
+			if enemies_left == 0:
+				level_timer = 0.0
+				global.level += 1
+				_start_level_transition(global.level)
 
 	_update_ui()
 	_handle_spawning(delta)
@@ -267,6 +291,9 @@ func _update_ui():
 		bomb_label.text = "Bombs: " + str(player.bombs_ammo)
 
 func _handle_spawning(delta: float):
+	if level_timer >= level_duration:
+		return
+
 	if $Enemies.get_child_count() > max_enemies_per_level:
 		return
 
