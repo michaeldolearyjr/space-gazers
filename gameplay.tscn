@@ -1,0 +1,160 @@
+[gd_scene format=3 uid="uid://8y2d2y7w8ks3"]
+
+[ext_resource type="Script" uid="uid://0fivahx02qdv" path="res://player.gd" id="1_n4psk"]
+[ext_resource type="Script" uid="uid://cj0f4scxdhu5b" path="res://gameplay.gd" id="1_oe8ih"]
+[ext_resource type="Script" uid="uid://duj88plc1nt78" path="res://laser.gd" id="3_fbudy"]
+[ext_resource type="Texture2D" uid="uid://dsqt0pty2a50q" path="res://assets/images/ship_pixel.png" id="3_x2ust"]
+[ext_resource type="AudioStream" uid="uid://bjevfx0iw0grg" path="res://assets/audio/shoot.ogg" id="3_xuee5"]
+[ext_resource type="Script" uid="uid://coyvvw3prwafu" path="res://gazer.gd" id="5_0m7cd"]
+[ext_resource type="Texture2D" uid="uid://cxyv7tr8jtb6m" path="res://assets/images/bullet.png" id="5_7y1a3"]
+[ext_resource type="Script" uid="uid://b0j8hftjf3f5f" path="res://asteroid.gd" id="6_2ihbs"]
+[ext_resource type="Script" uid="uid://cvmsuasuj65tq" path="res://enemy_ship.gd" id="7_1qy1k"]
+[ext_resource type="Script" uid="uid://dota65mar2yak" path="res://missile.gd" id="7_eglai"]
+[ext_resource type="Script" uid="uid://b5umv44n7tpmj" path="res://cursor.gd" id="8_7y1a3"]
+[ext_resource type="Texture2D" uid="uid://b56au7chihoau" path="res://assets/images/cursor.png" id="8_m1ld8"]
+[ext_resource type="Script" uid="uid://bram08r3pak68" path="res://redlaser.gd" id="9_2em84"]
+[ext_resource type="Texture2D" uid="uid://xueob1s68rvk" path="res://assets/images/beholder.png" id="11_0kugc"]
+[ext_resource type="Texture2D" uid="uid://n861mxci02bj" path="res://assets/images/asteroid_sm.png" id="13_hwi80"]
+[ext_resource type="Texture2D" uid="uid://cq82vmeytn7x1" path="res://assets/images/enemy_ship.png" id="15_td3eq"]
+[ext_resource type="Script" uid="uid://dwkggviro1nfk" path="res://powerup.gd" id="16_yr68n"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_smepj"]
+radius = 44.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_eyn1h"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ip4p6"]
+
+[node name="Gameplay" type="Node2D" unique_id=408052574]
+script = ExtResource("1_oe8ih")
+
+[node name="StarField" type="GPUParticles2D" parent="." unique_id=432403867]
+
+[node name="Player" type="CharacterBody2D" parent="." unique_id=694365698]
+motion_mode = 1
+script = ExtResource("1_n4psk")
+
+[node name="Sprite2D" type="Sprite2D" parent="Player" unique_id=556364802]
+texture = ExtResource("3_x2ust")
+hframes = 4
+vframes = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player" unique_id=917277840]
+shape = SubResource("CircleShape2D_smepj")
+
+[node name="Muzzle" type="Marker2D" parent="Player" unique_id=2068647517]
+
+[node name="Flashlight" type="PointLight2D" parent="Player" unique_id=94922381]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Player" unique_id=1746089602]
+
+[node name="Bullets" type="Node2D" parent="." unique_id=226193523]
+
+[node name="Laser" type="Area2D" parent="Bullets" unique_id=1150327802]
+script = ExtResource("3_fbudy")
+
+[node name="Sprite2D" type="Sprite2D" parent="Bullets/Laser" unique_id=371850242]
+texture = ExtResource("5_7y1a3")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bullets/Laser" unique_id=648616470]
+shape = SubResource("CircleShape2D_eyn1h")
+
+[node name="LaserSound" type="AudioStreamPlayer2D" parent="Bullets/Laser" unique_id=2100726680]
+stream = ExtResource("3_xuee5")
+
+[node name="Missile" type="Area2D" parent="Bullets" unique_id=254998847]
+script = ExtResource("7_eglai")
+
+[node name="Sprite2D" type="Sprite2D" parent="Bullets/Missile" unique_id=616829647]
+texture = ExtResource("5_7y1a3")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bullets/Missile" unique_id=1704531106]
+
+[node name="Target" type="Node2D" parent="." unique_id=552870597]
+
+[node name="Cursor" type="Area2D" parent="Target" unique_id=600026880]
+script = ExtResource("8_7y1a3")
+
+[node name="Sprite2D" type="Sprite2D" parent="Target/Cursor" unique_id=930000452]
+texture = ExtResource("8_m1ld8")
+
+[node name="EnemyBullets" type="Node2D" parent="." unique_id=105729366]
+
+[node name="RedLaser" type="Area2D" parent="EnemyBullets" unique_id=153850285]
+script = ExtResource("9_2em84")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyBullets/RedLaser" unique_id=1512558622]
+
+[node name="Sprite2D" type="Sprite2D" parent="EnemyBullets/RedLaser" unique_id=1997950243]
+
+[node name="Enemies" type="Node2D" parent="." unique_id=256737315]
+
+[node name="Gazer" type="Area2D" parent="Enemies" unique_id=1031027790]
+script = ExtResource("5_0m7cd")
+
+[node name="Sprite2D" type="Sprite2D" parent="Enemies/Gazer" unique_id=1553749726]
+texture = ExtResource("11_0kugc")
+hframes = 9
+vframes = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Enemies/Gazer" unique_id=728251332]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Enemies/Gazer" unique_id=529317390]
+
+[node name="Asteroid" type="Area2D" parent="Enemies" unique_id=1410513069]
+script = ExtResource("6_2ihbs")
+
+[node name="Sprite2D" type="Sprite2D" parent="Enemies/Asteroid" unique_id=2069811992]
+texture = ExtResource("13_hwi80")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Enemies/Asteroid" unique_id=1013373280]
+shape = SubResource("CircleShape2D_ip4p6")
+
+[node name="EnemyShip" type="Area2D" parent="Enemies" unique_id=476476697]
+script = ExtResource("7_1qy1k")
+
+[node name="Sprite2D" type="Sprite2D" parent="Enemies/EnemyShip" unique_id=702614153]
+texture = ExtResource("15_td3eq")
+hframes = 4
+vframes = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Enemies/EnemyShip" unique_id=1286506299]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Enemies/EnemyShip" unique_id=1471071532]
+
+[node name="Powerups" type="Node2D" parent="." unique_id=2050502135]
+
+[node name="Powerup" type="Area2D" parent="Powerups" unique_id=563296987]
+script = ExtResource("16_yr68n")
+
+[node name="Sprite2D" type="Sprite2D" parent="Powerups/Powerup" unique_id=109843483]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Powerups/Powerup" unique_id=793924680]
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=1249907992]
+
+[node name="ScoreLabel" type="Label" parent="UI" unique_id=943868201]
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="Healthbar" type="TextureProgressBar" parent="UI" unique_id=441712607]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="LevelLabel" type="Label" parent="UI" unique_id=1953479278]
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="MissileAmmoLabel" type="Label" parent="UI" unique_id=1999526607]
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="BombAmmoLabel" type="Label" parent="UI" unique_id=796883620]
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="FadeOverlay" type="ColorRect" parent="UI" unique_id=1512413413]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="MusicPlayer" type="AudioStreamPlayer2D" parent="." unique_id=705096078]
