@@ -5,19 +5,27 @@ var speedx: float = 0
 var speedy: float = 0
 var bullet_timer: float = 0.0
 var score_value: int = 0
+var anim_timer: float = 0.0
 
 func _ready() -> void:
+	scale = Vector2(3.5, 3.5)
+	collision_layer = 2
+	collision_mask = 17
+	body_entered.connect(_on_body_entered)
 	speedx = randf_range(-6.0, 6.0) * 10.0
 	speedy = randf_range(2.0, 16.0) * 10.0
 	bullet_timer = randf_range(0.5, 3.0)
 	
-	# If AnimationPlayer exists, we can play its default animation here
-	if has_node("AnimationPlayer"):
-		var anim = $AnimationPlayer
-		if anim.has_animation("default"):
-			anim.play("default")
+	# Removed AnimationPlayer default play so custom animation logic works
 
 func _process(delta: float) -> void:
+	anim_timer += delta
+	if anim_timer > 0.1:
+		anim_timer = 0.0
+		if has_node("Sprite2D"):
+			var s = $Sprite2D
+			s.frame = (s.frame + 1) % (s.hframes * s.vframes)
+			
 	global_position.x += speedx * delta
 	global_position.y += speedy * delta
 	
@@ -50,5 +58,12 @@ func take_damage(amount: int):
 	if hp <= 0:
 		if get_node_or_null("/root/Global"):
 			get_node("/root/Global").add_score(1500) # Base score
-		# Spawn particles or explosion here in gameplay.gd
+		var gameplay = get_tree().current_scene
+		if gameplay and gameplay.has_method("play_explosion"):
+			gameplay.play_explosion(global_position, Color.PURPLE)
 		queue_free()
+
+func _on_body_entered(body: Node2D):
+	if body.name == "Player" and body.has_method("take_damage"):
+		body.take_damage(20)
+		take_damage(1000)

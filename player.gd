@@ -12,6 +12,29 @@ var hit_timer: float = 0.0
 
 @onready var sprite = $Sprite2D
 
+func _ready() -> void:
+	scale = Vector2(3.5, 3.5)
+	collision_layer = 1
+	collision_mask = 14
+	
+	var vp = get_viewport_rect().size
+	global_position = Vector2(vp.x / 2.0, vp.y / 2.0 + 150.0)
+	
+	var exhaust = CPUParticles2D.new()
+	exhaust.amount = 30
+	exhaust.lifetime = 0.5
+	exhaust.direction = Vector2(0, 1)
+	exhaust.spread = 20.0
+	exhaust.gravity = Vector2(0, 0)
+	exhaust.initial_velocity_min = 50.0
+	exhaust.initial_velocity_max = 100.0
+	exhaust.scale_amount_min = 2.0
+	exhaust.scale_amount_max = 5.0
+	exhaust.color = Color.AQUA
+	exhaust.position = Vector2(0, 20)
+	exhaust.z_index = -1
+	add_child(exhaust)
+
 func _physics_process(delta: float) -> void:
 	if hit_timer > 0:
 		hit_timer -= delta
@@ -66,7 +89,7 @@ func _handle_shooting(delta: float):
 	if bullet_timer <= 0:
 		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 			shoot_laser()
-			bullet_timer = 0.1 if rapid_fire_timer <= 0 else 0.05
+			bullet_timer = 0.3 if rapid_fire_timer <= 0 else 0.15
 		elif Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and not Input.is_key_pressed(KEY_SHIFT):
 			if missiles_ammo > 0:
 				shoot_missile()
@@ -94,4 +117,5 @@ func take_damage(amount: int):
 	health -= amount
 	hit_timer = 0.5
 	if health <= 0:
+		get_tree().change_scene_to_file("res://game_over.tscn")
 		queue_free()

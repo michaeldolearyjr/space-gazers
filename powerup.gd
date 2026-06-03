@@ -6,11 +6,28 @@ var speedy: float = 0
 func _ready() -> void:
 	speedy = randf_range(5.0, 12.0) * 10.0
 	body_entered.connect(_on_body_entered)
+	scale = Vector2(3.0, 3.0)
+	collision_layer = 32
+	collision_mask = 1
 	
 	# Randomize type if not set externally
 	if type == "health":
 		var types = ["health", "rapid", "missile", "bomb"]
 		type = types[randi() % types.size()]
+		
+	if has_node("Sprite2D"):
+		$Sprite2D.texture = preload("res://assets/images/healthpack.png")
+		if type == "rapid":
+			$Sprite2D.modulate = Color.YELLOW
+		elif type == "missile":
+			$Sprite2D.modulate = Color.RED
+		elif type == "bomb":
+			$Sprite2D.modulate = Color.PURPLE
+			
+	if has_node("CollisionShape2D"):
+		var circle = CircleShape2D.new()
+		circle.radius = 16.0
+		$CollisionShape2D.shape = circle
 
 func _process(delta: float) -> void:
 	global_position.y += speedy * delta
