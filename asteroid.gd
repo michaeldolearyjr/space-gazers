@@ -34,6 +34,7 @@ func _process(delta: float) -> void:
 	var viewport_rect = get_viewport_rect()
 	if global_position.y > viewport_rect.size.y + 100:
 		queue_free()
+	queue_redraw()
 
 func take_damage(amount: int):
 	hp -= amount
@@ -47,5 +48,12 @@ func take_damage(amount: int):
 
 func _on_body_entered(body: Node2D):
 	if body.name == "Player" and body.has_method("take_damage"):
-		body.take_damage(30)
+		body.take_damage(100)
 		take_damage(1000)
+
+func _draw() -> void:
+	var global = get_node_or_null("/root/Global")
+	if global and global.debug_hitboxes:
+		if has_node("CollisionShape2D") and $CollisionShape2D.shape:
+			var r = $CollisionShape2D.shape.radius
+			draw_circle(Vector2.ZERO, r, Color(1, 0, 0, 0.5))

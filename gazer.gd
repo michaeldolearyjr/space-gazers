@@ -12,6 +12,12 @@ func _ready() -> void:
 	collision_layer = 2
 	collision_mask = 17
 	body_entered.connect(_on_body_entered)
+	
+	if has_node("CollisionShape2D"):
+		var circle = CircleShape2D.new()
+		circle.radius = 8.0
+		$CollisionShape2D.shape = circle
+
 	speedx = randf_range(-6.0, 6.0) * 10.0
 	speedy = randf_range(2.0, 16.0) * 10.0
 	bullet_timer = randf_range(0.5, 3.0)
@@ -24,7 +30,7 @@ func _process(delta: float) -> void:
 		anim_timer = 0.0
 		if has_node("Sprite2D"):
 			var s = $Sprite2D
-			s.frame = (s.frame + 1) % (s.hframes * s.vframes)
+			s.frame = (s.frame + 1) % s.hframes
 			
 	global_position.x += speedx * delta
 	global_position.y += speedy * delta
@@ -41,6 +47,7 @@ func _process(delta: float) -> void:
 			get_node("/root/Global").add_score(-int(speedy))
 		queue_free()
 
+	queue_redraw()
 	_handle_shooting(delta)
 
 func _handle_shooting(delta: float):
@@ -67,3 +74,10 @@ func _on_body_entered(body: Node2D):
 	if body.name == "Player" and body.has_method("take_damage"):
 		body.take_damage(20)
 		take_damage(1000)
+
+func _draw() -> void:
+	var global = get_node_or_null("/root/Global")
+	if global and global.debug_hitboxes:
+		if has_node("CollisionShape2D") and $CollisionShape2D.shape:
+			var r = $CollisionShape2D.shape.radius
+			draw_circle(Vector2.ZERO, r, Color(1, 0, 0, 0.5))

@@ -12,6 +12,11 @@ config_version=5
 
 config/name="Space Gazers"
 run/main_scene="res://main_menu.tscn"
+
+[autoload]
+
+Global="*res://global.gd"
+
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 

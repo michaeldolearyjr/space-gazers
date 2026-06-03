@@ -17,6 +17,12 @@ func _ready() -> void:
 	collision_layer = 1
 	collision_mask = 14
 	
+	if has_node("CollisionShape2D"):
+		var circle = CircleShape2D.new()
+		circle.radius = 8.0
+		$CollisionShape2D.shape = circle
+		
+	
 	var vp = get_viewport_rect().size
 	global_position = Vector2(vp.x / 2.0, vp.y / 2.0 + 150.0)
 	
@@ -80,6 +86,7 @@ func _physics_process(delta: float) -> void:
 	global_position.x = clamp(global_position.x, 0, viewport_rect.size.x)
 	global_position.y = clamp(global_position.y, 0, viewport_rect.size.y)
 
+	queue_redraw()
 	_handle_shooting(delta)
 
 func _handle_shooting(delta: float):
@@ -113,9 +120,18 @@ func shoot_bomb():
 	if get_parent().has_method("trigger_bomb"):
 		get_parent().trigger_bomb(global_position)
 
+func _draw() -> void:
+	var global = get_node_or_null("/root/Global")
+	if global and global.debug_hitboxes:
+		if has_node("CollisionShape2D") and $CollisionShape2D.shape:
+			var r = $CollisionShape2D.shape.radius
+			draw_circle(Vector2.ZERO, r, Color(0, 1, 0, 0.5))
+
 func take_damage(amount: int):
 	health -= amount
 	hit_timer = 0.5
 	if health <= 0:
-		get_tree().change_scene_to_file("res://game_over.tscn")
-		queue_free()
+		call_deferred("_die")
+
+func _die():
+	get_tree().change_scene_to_file("res://game_over.tscn")

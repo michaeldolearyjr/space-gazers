@@ -20,8 +20,16 @@ var spawn_timer: float = 0.0
 
 var level_timer: float = 0.0
 var level_duration: float = 30.0 # 30 seconds per level
-var enemies_spawned_this_level: int = 0
+var enemy_ships_spawned_this_level: int = 0
+var score: int = 0
+var highscore: int = 0
+var level: int = 1
+var debug_hitboxes: bool = false
+var max_enemy_ships_per_level: int = 1
 var max_enemies_per_level: int = 15
+
+var is_transitioning: bool = false
+var transition_timer: float = 0.0
 
 var pause_menu: CanvasLayer = null
 
@@ -37,6 +45,11 @@ func _ready() -> void:
 	
 	_setup_starfield()
 	_setup_pause_menu()
+	
+	var global = get_node_or_null("/root/Global")
+	if global:
+		max_enemies_per_level = 10 + (global.level * 5)
+		max_enemy_ships_per_level = global.level * 1
 	
 	# Start background music if present
 	if has_node("MusicPlayer"):
@@ -128,6 +141,10 @@ func _input(event: InputEvent) -> void:
 		var tree = get_tree()
 		tree.paused = !tree.paused
 		pause_menu.visible = tree.paused
+	if event is InputEventKey and event.pressed and event.keycode == KEY_H:
+		var global = get_node_or_null("/root/Global")
+		if global:
+			global.debug_hitboxes = !global.debug_hitboxes
 
 func play_explosion(pos: Vector2, target_color: Color = Color.ORANGE):
 	var sfx = AudioStreamPlayer2D.new()
@@ -144,6 +161,7 @@ func play_explosion(pos: Vector2, target_color: Color = Color.ORANGE):
 	particles.explosiveness = 1.0
 	particles.direction = Vector2(0, 0)
 	particles.spread = 180.0
+	particles.gravity = Vector2(0, 0)
 	particles.initial_velocity_min = 100.0
 	particles.initial_velocity_max = 300.0
 	particles.scale_amount_min = 2.0
@@ -197,18 +215,46 @@ func play_impact(pos: Vector2, target_color: Color, laser_color: Color):
 	timer.timeout.connect(particles.queue_free)
 	particles.add_child(timer)
 func _process(delta: float) -> void:
+	if is_transitioning:
+		transition_timer -= delta
+		if transition_timer <= 0.0:
+			is_transitioning = false
+			if has_node("UI/TransitionLabel"):
+				$UI/TransitionLabel.hide()
+			enemy_ships_spawned_this_level = 0
+			var global = get_node_or_null("/root/Global")
+			if global:
+				max_enemies_per_level = 10 + (global.level * 5)
+				max_enemy_ships_per_level = global.level * 1
+		_update_ui()
+		return
+
 	var global = get_node_or_null("/root/Global")
 	if global:
 		level_timer += delta
 		if level_timer >= level_duration:
 			level_timer = 0.0
 			global.level += 1
-			enemies_spawned_this_level = 0
-			max_enemies_per_level += 10 # Increase cap each level
-			get_tree().change_scene_to_file("res://story_screen.tscn")
+			_start_level_transition(global.level)
 
 	_update_ui()
 	_handle_spawning(delta)
+
+func _start_level_transition(next_level: int):
+	is_transitioning = true
+	transition_timer = 3.0
+	if not has_node("UI/TransitionLabel"):
+		var label = Label.new()
+		label.name = "TransitionLabel"
+		label.add_theme_font_size_override("font_size", 48)
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var vp = get_viewport_rect().size
+		label.position = Vector2(vp.x / 2.0 - 300, vp.y / 2.0 - 100)
+		label.size = Vector2(600, 200)
+		$UI.add_child(label)
+	var lbl = $UI/TransitionLabel
+	lbl.text = "Level " + str(next_level) + "\n\nIncoming enemy fleet detected!"
+	lbl.show()
 
 func _update_ui():
 	var global = get_node_or_null("/root/Global")
@@ -221,7 +267,7 @@ func _update_ui():
 		bomb_label.text = "Bombs: " + str(player.bombs_ammo)
 
 func _handle_spawning(delta: float):
-	if enemies_spawned_this_level >= max_enemies_per_level:
+	if $Enemies.get_child_count() > max_enemies_per_level:
 		return
 
 	spawn_timer -= delta
@@ -243,9 +289,8 @@ func _handle_spawning(delta: float):
 			$Enemies.add_child(g)
 			g.speedy *= speed_multiplier
 			g.speedx *= speed_multiplier
-			enemies_spawned_this_level += 1
 			
-		if rand < 0.05:
+		if rand < 0.05 and enemy_ships_spawned_this_level < max_enemy_ships_per_level:
 			var s = enemy_ship_template.duplicate()
 			s.show()
 			var viewport = get_viewport_rect()
@@ -253,7 +298,7 @@ func _handle_spawning(delta: float):
 			$Enemies.add_child(s)
 			s.speedy *= speed_multiplier
 			s.speedx *= speed_multiplier
-			enemies_spawned_this_level += 1
+			enemy_ships_spawned_this_level += 1
 			
 		if rand < 0.1:
 			var a = asteroid_template.duplicate()

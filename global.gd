@@ -3,6 +3,7 @@ extends Node
 var score: int = 0
 var highscore: int = 0
 var level: int = 1
+var debug_hitboxes: bool = false
 
 const SAVE_FILE = "user://gamedata.save"
 
