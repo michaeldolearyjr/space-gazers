@@ -79,6 +79,7 @@ theme_override_font_sizes/font_size = 18
 text = "Controls:
 WASD / Arrows - Move
 Left Click - Fire Laser
+Shift + Left Click - Rapid Fire
 Right Click - Fire Missiles
 Shift + Right Click - Fire Bomb"
 horizontal_alignment = 1

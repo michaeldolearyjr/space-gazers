@@ -2,6 +2,7 @@ extends Area2D
 
 var velocity: Vector2 = Vector2.ZERO
 var damage: int = 15
+var laser_color: Color = Color.RED
 
 func _ready() -> void:
 	collision_layer = 8
@@ -24,11 +25,11 @@ func _ready() -> void:
 	particles.scale_amount_min = 4.0
 	particles.scale_amount_max = 6.0
 	particles.gravity = Vector2(0, 0)
-	particles.color = Color.RED
+	particles.color = laser_color
 	
 	var light = PointLight2D.new()
 	light.texture = preload("res://assets/images/light.png")
-	light.color = Color.RED
+	light.color = laser_color
 	light.energy = 1.5
 	light.texture_scale = 0.3
 	particles.add_child(light)

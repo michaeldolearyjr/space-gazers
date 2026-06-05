@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" uid="uid://0fivahx02qdv" path="res://player.gd" id="1_n4psk"]
 [ext_resource type="Script" uid="uid://cj0f4scxdhu5b" path="res://gameplay.gd" id="1_oe8ih"]
+[ext_resource type="Texture2D" uid="uid://4r4u6r4nhx8v" path="res://assets/images/player_ship.png" id="3_eglai"]
 [ext_resource type="Script" uid="uid://duj88plc1nt78" path="res://laser.gd" id="3_fbudy"]
-[ext_resource type="Texture2D" uid="uid://dsqt0pty2a50q" path="res://assets/images/ship_pixel.png" id="3_x2ust"]
 [ext_resource type="AudioStream" uid="uid://bjevfx0iw0grg" path="res://assets/audio/shoot.ogg" id="3_xuee5"]
 [ext_resource type="Texture2D" uid="uid://3e0ifh7g15ut" path="res://assets/images/light.png" id="4_eglai"]
 [ext_resource type="Script" uid="uid://coyvvw3prwafu" path="res://gazer.gd" id="5_0m7cd"]
@@ -14,10 +14,10 @@
 [ext_resource type="Script" uid="uid://b5umv44n7tpmj" path="res://cursor.gd" id="8_7y1a3"]
 [ext_resource type="Texture2D" uid="uid://b56au7chihoau" path="res://assets/images/cursor.png" id="8_m1ld8"]
 [ext_resource type="Script" uid="uid://bram08r3pak68" path="res://redlaser.gd" id="9_2em84"]
-[ext_resource type="Texture2D" uid="uid://xueob1s68rvk" path="res://assets/images/beholder.png" id="11_0kugc"]
+[ext_resource type="Texture2D" uid="uid://bodmquogfj1xc" path="res://gazer.png" id="13_eglai"]
 [ext_resource type="Texture2D" uid="uid://n861mxci02bj" path="res://assets/images/asteroid_sm.png" id="13_hwi80"]
-[ext_resource type="Texture2D" uid="uid://cq82vmeytn7x1" path="res://assets/images/enemy_ship.png" id="15_td3eq"]
 [ext_resource type="Script" uid="uid://dwkggviro1nfk" path="res://powerup.gd" id="16_yr68n"]
+[ext_resource type="Texture2D" uid="uid://dnfb1e2lnvs8" path="res://assets/images/enemy_ship_3.png" id="17_eglai"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_smepj"]
 radius = 44.0
@@ -29,6 +29,9 @@ radius = 44.0
 [node name="Gameplay" type="Node2D" unique_id=408052574]
 script = ExtResource("1_oe8ih")
 
+[node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=1296579637]
+color = Color(0.1, 0.1, 0.1, 1)
+
 [node name="StarField" type="GPUParticles2D" parent="." unique_id=432403867]
 
 [node name="Player" type="CharacterBody2D" parent="." unique_id=694365698]
@@ -36,7 +39,7 @@ motion_mode = 1
 script = ExtResource("1_n4psk")
 
 [node name="Sprite2D" type="Sprite2D" parent="Player" unique_id=556364802]
-texture = ExtResource("3_x2ust")
+texture = ExtResource("3_eglai")
 hframes = 4
 vframes = 4
 
@@ -47,6 +50,7 @@ shape = SubResource("CircleShape2D_smepj")
 
 [node name="Flashlight" type="PointLight2D" parent="Player" unique_id=94922381]
 texture = ExtResource("4_eglai")
+texture_scale = 0.5
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Player" unique_id=1746089602]
 
@@ -95,9 +99,9 @@ script = ExtResource("9_2em84")
 script = ExtResource("5_0m7cd")
 
 [node name="Sprite2D" type="Sprite2D" parent="Enemies/Gazer" unique_id=1553749726]
-texture = ExtResource("11_0kugc")
-hframes = 9
-vframes = 2
+texture = ExtResource("13_eglai")
+hframes = 7
+vframes = 3
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Enemies/Gazer" unique_id=728251332]
 
@@ -116,9 +120,7 @@ shape = SubResource("CircleShape2D_ip4p6")
 script = ExtResource("7_1qy1k")
 
 [node name="Sprite2D" type="Sprite2D" parent="Enemies/EnemyShip" unique_id=702614153]
-texture = ExtResource("15_td3eq")
-hframes = 4
-vframes = 2
+texture = ExtResource("17_eglai")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Enemies/EnemyShip" unique_id=1286506299]
 

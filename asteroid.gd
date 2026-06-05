@@ -40,7 +40,7 @@ func take_damage(amount: int):
 	hp -= amount
 	if hp <= 0:
 		if get_node_or_null("/root/Global"):
-			get_node("/root/Global").add_score(100)
+			get_node("/root/Global").add_score(10000)
 		var gameplay = get_tree().current_scene
 		if gameplay and gameplay.has_method("play_explosion"):
 			gameplay.play_explosion(global_position, Color.GRAY)

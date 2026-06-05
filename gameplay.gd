@@ -15,6 +15,7 @@ extends Node2D
 @onready var level_label = $UI/LevelLabel
 @onready var missile_label = $UI/MissileAmmoLabel
 @onready var bomb_label = $UI/BombAmmoLabel
+var rapid_fire_label: Label
 
 var spawn_timer: float = 0.0
 
@@ -48,7 +49,7 @@ func _ready() -> void:
 	
 	var global = get_node_or_null("/root/Global")
 	if global:
-		max_enemies_per_level = 10 + (global.level * 5)
+		max_enemies_per_level = 15 + (global.level * 10)
 		max_enemy_ships_per_level = global.level * 1
 	
 	# Start background music if present
@@ -57,6 +58,7 @@ func _ready() -> void:
 		if stream is AudioStreamOggVorbis:
 			stream.loop = true
 		$MusicPlayer.stream = stream
+		$MusicPlayer.volume_db = -10.0
 		$MusicPlayer.play()
 		
 	# Setup Healthbar
@@ -81,6 +83,15 @@ func _ready() -> void:
 		missile_label.position = Vector2(20, 60)
 	if has_node("UI/BombAmmoLabel"):
 		bomb_label.position = Vector2(20, 90)
+		
+	# Create rapid fire label
+	rapid_fire_label = Label.new()
+	rapid_fire_label.position = Vector2(20, 120)
+	var font = load("res://assets/RetroGaming.ttf")
+	if font:
+		rapid_fire_label.add_theme_font_override("font", font)
+		rapid_fire_label.add_theme_font_size_override("font_size", 24)
+	$UI.add_child(rapid_fire_label)
 		
 	if has_node("UI/FadeOverlay"):
 		$UI/FadeOverlay.hide()
@@ -167,6 +178,7 @@ func play_explosion(pos: Vector2, target_color: Color = Color.ORANGE):
 	var sfx = AudioStreamPlayer2D.new()
 	sfx.stream = load("res://assets/audio/explosion.ogg")
 	sfx.global_position = pos
+	sfx.volume_db = -10.0
 	add_child(sfx)
 	sfx.play()
 	sfx.finished.connect(sfx.queue_free)
@@ -243,7 +255,7 @@ func _process(delta: float) -> void:
 			enemy_ships_spawned_this_level = 0
 			var global = get_node_or_null("/root/Global")
 			if global:
-				max_enemies_per_level = 10 + (global.level * 5)
+				max_enemies_per_level = 15 + (global.level * 10)
 				max_enemy_ships_per_level = global.level * 1
 		_update_ui()
 		return
@@ -289,6 +301,8 @@ func _update_ui():
 		healthbar.value = (float(player.health) / 196.0) * 100.0
 		missile_label.text = "Missiles: " + str(player.missiles_ammo)
 		bomb_label.text = "Bombs: " + str(player.bombs_ammo)
+		if is_instance_valid(rapid_fire_label):
+			rapid_fire_label.text = "Rapid Fire: " + str(player.rapid_fire_ammo)
 
 func _handle_spawning(delta: float):
 	if level_timer >= level_duration:
@@ -302,13 +316,14 @@ func _handle_spawning(delta: float):
 		var global = get_node_or_null("/root/Global")
 		var current_level = global.level if global else 1
 		
-		spawn_timer = max(0.1, 0.5 - (current_level * 0.02)) # Spawns get faster
-		var speed_multiplier = 1.0 + (current_level * 0.15) # Speed increases
+		spawn_timer = max(0.05, 0.5 - (current_level * 0.08)) # Spawns get much faster
+		var speed_multiplier = 1.0 + (current_level * 0.4) # Speed increases aggressively
 		
-		# Probability checks based on level (simplified)
+		# Probability checks based on level
 		var rand = randf()
 		
-		if rand < 0.2:
+		var gazer_prob = min(0.8, 0.2 + (current_level * 0.1))
+		if rand < gazer_prob:
 			var g = gazer_template.duplicate()
 			g.show()
 			var viewport = get_viewport_rect()
@@ -338,6 +353,8 @@ func _handle_spawning(delta: float):
 		if rand < 0.02:
 			var p = powerup_template.duplicate()
 			p.show()
+			var types = ["health", "rapid", "missile", "bomb"]
+			p.type = types[randi() % types.size()]
 			var viewport = get_viewport_rect()
 			p.global_position = Vector2(randf_range(0, viewport.size.x), -50)
 			$Powerups.add_child(p)
@@ -377,6 +394,20 @@ func spawn_enemy_laser(pos: Vector2):
 	var laser = red_laser_template.duplicate()
 	laser.show()
 	laser.global_position = pos
+	var dir = Vector2(0, 1) # default down
+	if is_instance_valid(player):
+		dir = (player.global_position - pos).normalized()
+	laser.velocity = dir * 400.0
+	$EnemyBullets.add_child(laser)
+
+func spawn_gazer_laser(pos: Vector2):
+	var laser = red_laser_template.duplicate()
+	laser.show()
+	laser.global_position = pos
+	laser.modulate = Color.PURPLE
+	laser.laser_color = Color.PURPLE
+	if laser.has_node("Sprite2D"):
+		laser.get_node("Sprite2D").modulate = Color.PURPLE
 	var dir = Vector2(0, 1) # default down
 	if is_instance_valid(player):
 		dir = (player.global_position - pos).normalized()

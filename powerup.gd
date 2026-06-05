@@ -6,23 +6,41 @@ var speedy: float = 0
 func _ready() -> void:
 	speedy = randf_range(5.0, 12.0) * 10.0
 	body_entered.connect(_on_body_entered)
-	scale = Vector2(3.0, 3.0)
 	collision_layer = 32
 	collision_mask = 1
 	
-	# Randomize type if not set externally
-	if type == "health":
-		var types = ["health", "rapid", "missile", "bomb"]
-		type = types[randi() % types.size()]
+	# Type is now explicitly set by gameplay.gd before adding to the tree
 		
 	if has_node("Sprite2D"):
-		$Sprite2D.texture = preload("res://assets/images/healthpack.png")
-		if type == "rapid":
-			$Sprite2D.modulate = Color.YELLOW
-		elif type == "missile":
-			$Sprite2D.modulate = Color.RED
-		elif type == "bomb":
-			$Sprite2D.modulate = Color.PURPLE
+		if type == "health":
+			$Sprite2D.texture = preload("res://assets/images/healthpack.png")
+			$Sprite2D.modulate = Color.WHITE
+			scale = Vector2(1.5, 1.5)
+		else:
+			$Sprite2D.hide()
+			scale = Vector2(2.0, 2.0)
+			
+			var bg = ColorRect.new()
+			bg.color = Color.ORANGE
+			bg.size = Vector2(16, 20)
+			bg.position = Vector2(-8, -10)
+			add_child(bg)
+			
+			var lbl = Label.new()
+			if type == "rapid":
+				lbl.text = "R"
+			elif type == "missile":
+				lbl.text = "M"
+			elif type == "bomb":
+				lbl.text = "B"
+				
+			lbl.add_theme_font_size_override("font_size", 14)
+			lbl.add_theme_color_override("font_color", Color.BLACK)
+			lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			lbl.size = bg.size
+			lbl.position = bg.position
+			add_child(lbl)
 			
 	if has_node("CollisionShape2D"):
 		var circle = CircleShape2D.new()
@@ -41,9 +59,14 @@ func _on_body_entered(body: Node2D):
 		if type == "health":
 			body.health = min(body.health + 20, 196) # Adjust heal amount as needed
 		elif type == "rapid":
-			body.rapid_fire_timer = 10.0 # 10 seconds of rapid fire
+			body.rapid_fire_ammo += 50
 		elif type == "missile":
 			body.missiles_ammo += 3
 		elif type == "bomb":
 			body.bombs_ammo += 1
+			
+		var global = get_node_or_null("/root/Global")
+		if global:
+			global.add_score(25000)
+			
 		queue_free()

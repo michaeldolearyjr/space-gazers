@@ -5,6 +5,7 @@ var speedx: float = 0
 var speedy: float = 0
 var bullet_timer: float = 0.0
 var anim_timer: float = 0.0
+var hit_timer: float = 0.0
 
 func _ready() -> void:
 	scale = Vector2(3.5, 3.5)
@@ -12,9 +13,18 @@ func _ready() -> void:
 	collision_mask = 17
 	body_entered.connect(_on_body_entered)
 	
+	if has_node("Sprite2D"):
+		$Sprite2D.hframes = 1
+		$Sprite2D.vframes = 1
+		var tex = $Sprite2D.texture
+		if tex:
+			var frame_width = tex.get_width()
+			var sprite_scale = 32.0 / frame_width
+			$Sprite2D.scale = Vector2(sprite_scale, sprite_scale)
+	
 	if has_node("CollisionShape2D"):
 		var circle = CircleShape2D.new()
-		circle.radius = 8.0
+		circle.radius = 16.0
 		$CollisionShape2D.shape = circle
 
 	speedx = randf_range(-6.0, 6.0) * 10.0
@@ -24,12 +34,14 @@ func _ready() -> void:
 	# Removed AnimationPlayer default play so custom animation logic works
 
 func _process(delta: float) -> void:
-	anim_timer += delta
-	if anim_timer > 0.1:
-		anim_timer = 0.0
-		if has_node("Sprite2D"):
-			var s = $Sprite2D
-			s.frame = (s.frame + 1) % s.hframes
+	if hit_timer > 0:
+		hit_timer -= delta
+		if hit_timer <= 0 and has_node("Sprite2D"):
+			$Sprite2D.modulate = Color.WHITE
+
+	if has_node("Sprite2D"):
+		$Sprite2D.rotation += 3.0 * delta # Continually rotate
+		
 			
 	global_position.x += speedx * delta
 	global_position.y += speedy * delta
@@ -40,7 +52,7 @@ func _process(delta: float) -> void:
 		
 	if global_position.y > viewport_rect.size.y + 100:
 		if get_node_or_null("/root/Global"):
-			get_node("/root/Global").add_score(-int(speedy * 2))
+			get_node("/root/Global").add_score(-int(speedy * 200))
 		queue_free()
 
 	queue_redraw()
@@ -58,9 +70,14 @@ func shoot():
 
 func take_damage(amount: int):
 	hp -= amount
+	
+	if has_node("Sprite2D"):
+		$Sprite2D.modulate = Color(5, 0, 0, 1) # Bright solid red flash
+		hit_timer = 0.1
+		
 	if hp <= 0:
 		if get_node_or_null("/root/Global"):
-			get_node("/root/Global").add_score(5000)
+			get_node("/root/Global").add_score(500000)
 		var gameplay = get_tree().current_scene
 		if gameplay and gameplay.has_method("play_explosion"):
 			gameplay.play_explosion(global_position, Color.BLUE)
