@@ -18,6 +18,18 @@ func _ready() -> void:
 		var circle = CircleShape2D.new()
 		circle.radius = 8.0
 		$CollisionShape2D.shape = circle
+		
+	var outer = Area2D.new()
+	outer.name = "OuterHitbox"
+	outer.collision_layer = 2
+	outer.collision_mask = 0
+	outer.set_script(preload("res://outer_hitbox.gd"))
+	var outer_shape = CollisionShape2D.new()
+	var outer_circle = CircleShape2D.new()
+	outer_circle.radius = 20.0
+	outer_shape.shape = outer_circle
+	outer.add_child(outer_shape)
+	add_child(outer)
 
 	speedx = randf_range(-6.0, 6.0) * 10.0
 	speedy = randf_range(2.0, 16.0) * 10.0
@@ -75,8 +87,11 @@ func _process(delta: float) -> void:
 			
 		# Delete if off bottom
 		if global_position.y > viewport_rect.size.y + 100:
-			if get_node_or_null("/root/Global"):
-				get_node("/root/Global").add_score(-int(speedy * 100))
+			var gameplay = get_tree().current_scene
+			var player = gameplay.get_node_or_null("Player")
+			if player and not player.is_dying:
+				if get_node_or_null("/root/Global"):
+					get_node("/root/Global").add_score(-int(speedy * 100))
 			queue_free()
 
 		_handle_shooting(delta)
@@ -120,3 +135,6 @@ func _draw() -> void:
 		if has_node("CollisionShape2D") and $CollisionShape2D.shape:
 			var r = $CollisionShape2D.shape.radius
 			draw_circle(Vector2.ZERO, r, Color(1, 0, 0, 0.5))
+		if has_node("OuterHitbox/CollisionShape2D") and $OuterHitbox/CollisionShape2D.shape:
+			var r2 = $OuterHitbox/CollisionShape2D.shape.radius
+			draw_circle(Vector2.ZERO, r2, Color(1, 1, 0, 0.3))

@@ -189,7 +189,7 @@ func _setup_hyperspace():
 	press_key_label.size = Vector2(400, 30)
 	story_ui.add_child(press_key_label)
 	
-	var img = Image.create(1, 20, false, Image.FORMAT_RGBA8)
+	var img = Image.create(1, 1, false, Image.FORMAT_RGBA8)
 	img.fill(Color.WHITE)
 	var strip_tex = ImageTexture.create_from_image(img)
 	

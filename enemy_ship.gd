@@ -51,8 +51,11 @@ func _process(delta: float) -> void:
 		speedx = -speedx
 		
 	if global_position.y > viewport_rect.size.y + 100:
-		if get_node_or_null("/root/Global"):
-			get_node("/root/Global").add_score(-int(speedy * 200))
+		var gameplay = get_tree().current_scene
+		var player = gameplay.get_node_or_null("Player")
+		if player and not player.is_dying:
+			if get_node_or_null("/root/Global"):
+				get_node("/root/Global").add_score(-int(speedy * 200))
 		queue_free()
 
 	queue_redraw()

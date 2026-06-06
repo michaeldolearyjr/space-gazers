@@ -6,8 +6,9 @@ var laser_color: Color = Color.RED
 
 func _ready() -> void:
 	collision_layer = 8
-	collision_mask = 1
+	collision_mask = 7 # 1 (Player) + 2 (Enemies) + 4 (Asteroids)
 	body_entered.connect(_on_body_entered)
+	area_entered.connect(_on_area_entered)
 	
 	if has_node("CollisionShape2D"):
 		var circle = CircleShape2D.new()
@@ -48,6 +49,15 @@ func _process(delta: float) -> void:
 func _on_body_entered(body: Node2D):
 	if body.name == "Player" and body.has_method("take_damage"):
 		body.take_damage(10)
+		var gameplay = get_tree().current_scene
+		if gameplay and gameplay.has_method("play_impact"):
+			gameplay.play_impact(global_position, Color.WHITE, Color.RED)
+		queue_free()
+
+func _on_area_entered(area: Area2D):
+	if area.name.begins_with("Gazer") or area.name == "OuterHitbox" or area.name.begins_with("Asteroid"):
+		if area.has_method("take_damage"):
+			area.take_damage(damage)
 		var gameplay = get_tree().current_scene
 		if gameplay and gameplay.has_method("play_impact"):
 			gameplay.play_impact(global_position, Color.WHITE, Color.RED)
