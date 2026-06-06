@@ -43,6 +43,11 @@ var is_boss_phase: bool = false
 var boss_phase_state: int = 0
 var boss_wave_timer: float = 0.0
 
+var is_ending_cutscene: bool = false
+var ending_state: int = 0
+var ending_timer: float = 0.0
+var alien_planet_sprite: Sprite2D = null
+
 func _ready() -> void:
 	# Remove templates from tree so they don't process and queue_free() themselves
 	$Bullets.remove_child(laser_template)
@@ -176,7 +181,7 @@ func _setup_hyperspace():
 	if font:
 		text_label.add_theme_font_override("font", font)
 	text_label.add_theme_font_size_override("font_size", 24)
-	text_label.text = "The earth was destroyed by the gazers, you have nothing left to lose...\n\nFly your lone spaceship into deep space to take out as many of those alien bastards as you can.\n\nGood luck."
+	text_label.text = "The earth was destroyed by the gazers, and I have nothing left to lose...\n\nSo I fly my lone spaceship deep into gazer space and I'll take out as many of those alien bastards as I can!"
 	text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	text_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -270,6 +275,11 @@ func _input(event: InputEvent) -> void:
 			_drop_out_of_hyperspace()
 		return
 
+	if ending_state == 5:
+		if (event is InputEventKey and event.pressed) or (event is InputEventMouseButton and event.pressed):
+			get_tree().change_scene_to_file("res://main_menu.tscn")
+		return
+
 	if event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.pressed and event.keycode == KEY_P):
 		var tree = get_tree()
 		tree.paused = !tree.paused
@@ -353,6 +363,11 @@ func play_impact(pos: Vector2, target_color: Color, laser_color: Color):
 func _process(delta: float) -> void:
 	if is_in_hyperspace:
 		return
+		
+	if is_ending_cutscene:
+		_handle_ending_cutscene(delta)
+		_update_ui()
+		return
 
 	if is_transitioning:
 		transition_timer -= delta
@@ -403,11 +418,28 @@ func _start_level_transition(next_level: int):
 		label.add_theme_font_size_override("font_size", 48)
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		var vp = get_viewport_rect().size
-		label.position = Vector2(vp.x / 2.0 - 300, vp.y / 2.0 - 100)
-		label.size = Vector2(600, 200)
+		label.position = Vector2(vp.x / 2.0 - 500, vp.y / 2.0 - 100)
+		label.size = Vector2(1000, 200)
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		$UI.add_child(label)
+		
+	var stories = [
+		"",
+		"My family... gone. The Earth reduced to ash.\nI can't believe I'm still alive. I must keep going.",
+		"They just keep coming. Every alien destroyed is a small measure of justice.",
+		"Their mothership was massive, but it bled just like the rest of them. I think I know where they're coming from.",
+		"The deeper I go, the more aggressive they become. My ship is holding together, but for how long?",
+		"I can see their home system in the distance. The stars here are strange, alien. It's cold.",
+		"Another mothership down. They are trying to stop me from reaching their planet.",
+		"Almost there. The gazers won't stop me. I will make them pay for what they did.",
+		"The alien homeworld. This is it. I have nothing left to lose.",
+	]
+	var story = "Incoming enemy fleet detected!"
+	if next_level >= 2 and next_level <= 9:
+		story = stories[next_level - 1]
+		
 	var lbl = $UI/TransitionLabel
-	lbl.text = "Level " + str(next_level) + "\n\nIncoming enemy fleet detected!"
+	lbl.text = "Level " + str(next_level) + "\n\n" + story
 	lbl.show()
 
 func _handle_boss_phase(delta: float):
@@ -450,8 +482,146 @@ func _handle_boss_phase(delta: float):
 			is_boss_phase = false
 			var global = get_node_or_null("/root/Global")
 			if global:
-				global.level += 1
-				_start_level_transition(global.level)
+				if global.level >= 9:
+					is_ending_cutscene = true
+					ending_state = 0
+					ending_timer = 2.0
+					if is_instance_valid(player):
+						player.set_physics_process(false)
+						player.set_process_input(false)
+						player.hit_timer = 0
+						if player.has_node("Sprite2D"):
+							player.get_node("Sprite2D").frame_coords.y = 0
+					for b in $EnemyBullets.get_children(): b.queue_free()
+					for b in $Bullets.get_children(): b.queue_free()
+				else:
+					global.level += 1
+					_start_level_transition(global.level)
+
+func _handle_ending_cutscene(delta: float):
+	ending_timer -= delta
+	if ending_state == 0:
+		if ending_timer <= 0:
+			ending_state = 1
+			ending_timer = 5.0
+			alien_planet_sprite = Sprite2D.new()
+			var img = Image.new()
+			var err = img.load("res://assets/images/alienplanet.jpg")
+			if err == OK:
+				alien_planet_sprite.texture = ImageTexture.create_from_image(img)
+			else:
+				# Fallback if image not loaded properly
+				var fallback = PlaceholderTexture2D.new()
+				fallback.size = Vector2(800, 800)
+				alien_planet_sprite.texture = fallback
+			
+			var vp = get_viewport_rect().size
+			var tex_w = alien_planet_sprite.texture.get_width()
+			var target_scale = (vp.x / 2.0) / tex_w # Half the viewport width
+			alien_planet_sprite.scale = Vector2(target_scale, target_scale)
+			alien_planet_sprite.position = Vector2(vp.x / 2.0, -vp.y / 2.0)
+			alien_planet_sprite.z_index = -50
+			add_child(alien_planet_sprite)
+			
+			var tween = create_tween()
+			tween.tween_property(alien_planet_sprite, "position:y", vp.y / 2.0, 4.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+			
+	elif ending_state == 1:
+		if ending_timer <= 0:
+			ending_state = 2
+			ending_timer = 3.0
+			if is_instance_valid(player):
+				var tween = create_tween().set_parallel(true)
+				tween.tween_property(player, "position", alien_planet_sprite.position, 3.0)
+				tween.tween_property(player, "scale", Vector2(0, 0), 3.0)
+				
+	elif ending_state == 2:
+		if ending_timer <= 0:
+			ending_state = 3
+			ending_timer = 4.0
+			var has_bomb = false
+			if is_instance_valid(player) and player.bombs_ammo > 0:
+				has_bomb = true
+				
+			if has_bomb:
+				var global = get_node_or_null("/root/Global")
+				if global:
+					global.add_score(1000000000)
+				if is_instance_valid(alien_planet_sprite):
+					for i in range(15):
+						var offset = Vector2(randf_range(-200, 200), randf_range(-200, 200))
+						play_explosion(alien_planet_sprite.position + offset, Color.CYAN)
+						play_explosion(alien_planet_sprite.position + offset, Color.WHITE)
+					alien_planet_sprite.hide()
+			
+			var dim = ColorRect.new()
+			dim.color = Color(0, 0, 0, 0)
+			dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+			dim.name = "EndDim"
+			$UI.add_child(dim)
+			var fade_tween = create_tween()
+			fade_tween.tween_property(dim, "color:a", 1.0, 2.0)
+			
+	elif ending_state == 3:
+		if ending_timer <= 0:
+			ending_state = 4
+			_show_ending_screen()
+
+func _show_ending_screen():
+	var has_bomb = false
+	if is_instance_valid(player) and player.bombs_ammo > 0:
+		has_bomb = true
+		
+	var story_ui = Control.new()
+	story_ui.set_anchors_preset(Control.PRESET_FULL_RECT)
+	$UI.add_child(story_ui)
+	
+	var dim = ColorRect.new()
+	dim.color = Color(0, 0, 0, 1.0)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	story_ui.add_child(dim)
+	
+	var text_label = Label.new()
+	var font = load("res://assets/RetroGaming.ttf")
+	if font:
+		text_label.add_theme_font_override("font", font)
+	text_label.add_theme_font_size_override("font_size", 24)
+	text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	text_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var vp = get_viewport_rect().size
+	text_label.position = Vector2(vp.x / 2.0 - 400, vp.y / 2.0 - 200)
+	text_label.size = Vector2(800, 400)
+	story_ui.add_child(text_label)
+	
+	if has_bomb:
+		text_label.text = "CONGRATULATIONS!\n\nYou reached the alien homeworld and delivered the ultimate payload. The planet is destroyed, and Earth is avenged.\n\nYou have beaten the game!"
+	else:
+		text_label.text = "CONGRATULATIONS!\n\nYou survived the journey and reached the alien homeworld... but without a bomb, their planet remains a threat.\n\nYou have beaten the game!\n\nTeaser: Prepare for the sequel on the alien surface!"
+		
+	var global = get_node_or_null("/root/Global")
+	if global:
+		var score_lbl = Label.new()
+		if font:
+			score_lbl.add_theme_font_override("font", font)
+		score_lbl.add_theme_font_size_override("font_size", 32)
+		score_lbl.text = "FINAL SCORE: " + str(global.score) + "\nHIGH SCORE: " + str(global.highscore)
+		score_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		score_lbl.position = Vector2(vp.x / 2.0 - 300, vp.y / 2.0 + 100)
+		score_lbl.size = Vector2(600, 100)
+		story_ui.add_child(score_lbl)
+		
+	var press_key_label = Label.new()
+	if font:
+		press_key_label.add_theme_font_override("font", font)
+	press_key_label.add_theme_font_size_override("font_size", 18)
+	press_key_label.text = "Press Any Key to Return to Menu"
+	press_key_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	press_key_label.position = Vector2(vp.x / 2.0 - 200, vp.y - 100)
+	press_key_label.size = Vector2(400, 30)
+	story_ui.add_child(press_key_label)
+	
+	ending_state = 5
 
 func _update_ui():
 	var global = get_node_or_null("/root/Global")

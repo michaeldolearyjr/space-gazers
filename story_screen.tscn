@@ -30,11 +30,11 @@ offset_right = 400.0
 offset_bottom = 200.0
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 24
-text = "The earth was destroyed by the gazers, you have nothing left to lose...
+text = "The earth was destroyed by the gazers, I have nothing left to lose...
 
-Fly your lone spaceship into deep space to take out as many of those alien bastards as you can.
+So I fly my lone spaceship deep into gazer space and I'll take out as many of those alien bastards as I can!
 
-Good luck."
+"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
