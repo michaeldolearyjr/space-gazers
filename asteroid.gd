@@ -8,16 +8,16 @@ var rotation_speed: float = 0
 func _ready() -> void:
 	speedy = randf_range(2.0, 16.0) * 10.0
 	rotation_speed = randf_range(-3.0, 3.0)
-	scale = Vector2(3.5, 3.5)
+	scale = Vector2(0.125, 0.125)
 	collision_layer = 4
 	collision_mask = 17
 	body_entered.connect(_on_body_entered)
 	
 	var textures = [
-		preload("res://assets/images/asteroid_sm.png"),
-		preload("res://assets/images/asteroid_md.png"),
-		preload("res://assets/images/asteroid_lg.png"),
-		preload("res://assets/images/asteroid_lg2.png")
+		preload("res://assets/images/asteroidsm.png"),
+		preload("res://assets/images/asteroidmd.png"),
+		preload("res://assets/images/asteroidlg.png"),
+		preload("res://assets/images/asteroidlg2.png")
 	]
 	var tex = textures[randi() % textures.size()]
 	if has_node("Sprite2D"):
