@@ -37,6 +37,12 @@ var star_systems: Array[CPUParticles2D] = []
 
 var pause_menu: CanvasLayer = null
 
+var boss_template = preload("res://boss.tscn")
+var boss_orb_template = preload("res://boss_orb.tscn")
+var is_boss_phase: bool = false
+var boss_phase_state: int = 0
+var boss_wave_timer: float = 0.0
+
 func _ready() -> void:
 	# Remove templates from tree so they don't process and queue_free() themselves
 	$Bullets.remove_child(laser_template)
@@ -372,8 +378,18 @@ func _process(delta: float) -> void:
 					enemies_left += 1
 			if enemies_left == 0:
 				level_timer = 0.0
-				global.level += 1
-				_start_level_transition(global.level)
+				if global.level % 3 == 0:
+					is_boss_phase = true
+					boss_phase_state = 1
+					boss_wave_timer = 4.0 # Duration of powerup wave
+				else:
+					global.level += 1
+					_start_level_transition(global.level)
+
+	if is_boss_phase:
+		_handle_boss_phase(delta)
+		_update_ui()
+		return
 
 	_update_ui()
 	_handle_spawning(delta)
@@ -393,6 +409,49 @@ func _start_level_transition(next_level: int):
 	var lbl = $UI/TransitionLabel
 	lbl.text = "Level " + str(next_level) + "\n\nIncoming enemy fleet detected!"
 	lbl.show()
+
+func _handle_boss_phase(delta: float):
+	boss_wave_timer -= delta
+	if boss_phase_state == 1:
+		# Powerup wave
+		if boss_wave_timer <= 0:
+			boss_phase_state = 2
+			boss_wave_timer = 5.0 # wait 5 seconds before boss spawns
+		else:
+			# Spawn powerups/asteroids rapidly
+			if randf() < 0.015: # Limit asteroids (~1 per second)
+				var a = asteroid_template.duplicate()
+				a.show()
+				var vp = get_viewport_rect().size
+				a.global_position = Vector2(randf_range(0, vp.x), -50)
+				$Enemies.add_child(a)
+			if randf() < 0.05: # Limit powerups (~3 per second)
+				var p = powerup_template.duplicate()
+				p.show()
+				var vp = get_viewport_rect().size
+				p.global_position = Vector2(randf_range(0, vp.x), -50)
+				p.type = "missile" if randf() < 0.7 else (["health", "rapid", "bomb"][randi() % 3])
+				$Powerups.add_child(p)
+	elif boss_phase_state == 2:
+		if boss_wave_timer <= 0:
+			boss_phase_state = 3
+			var b = boss_template.instantiate()
+			var vp = get_viewport_rect().size
+			b.global_position = Vector2(vp.x / 2.0, -100)
+			$Enemies.add_child(b)
+	elif boss_phase_state == 3:
+		var has_boss = false
+		for enemy in $Enemies.get_children():
+			if enemy.name.begins_with("Boss") and not enemy.is_queued_for_deletion():
+				has_boss = true
+				break
+		if not has_boss:
+			# Boss defeated!
+			is_boss_phase = false
+			var global = get_node_or_null("/root/Global")
+			if global:
+				global.level += 1
+				_start_level_transition(global.level)
 
 func _update_ui():
 	var global = get_node_or_null("/root/Global")
@@ -502,6 +561,15 @@ func spawn_enemy_laser(pos: Vector2):
 		dir = (player.global_position - pos).normalized()
 	laser.velocity = dir * 400.0
 	$EnemyBullets.add_child(laser)
+
+func spawn_swirling_orb(pos: Vector2):
+	var orb = boss_orb_template.instantiate()
+	orb.global_position = pos
+	var dir = Vector2(0, 1)
+	if is_instance_valid(player):
+		dir = (player.global_position - pos).normalized()
+	orb.velocity = dir * 150.0
+	$EnemyBullets.add_child(orb)
 
 func spawn_gazer_laser(pos: Vector2):
 	var laser = red_laser_template.duplicate()
