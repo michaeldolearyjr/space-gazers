@@ -57,7 +57,10 @@ func _process(delta: float) -> void:
 func _on_body_entered(body: Node2D):
 	if body.name == "Player":
 		if type == "health":
-			body.health = min(body.health + 20, 196) # Adjust heal amount as needed
+			if body.has_method("heal"):
+				body.heal(65)
+			else:
+				body.health = min(body.health + 65, 196)
 		elif type == "rapid":
 			body.rapid_fire_ammo += 50
 		elif type == "missile":

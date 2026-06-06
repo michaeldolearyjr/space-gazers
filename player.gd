@@ -157,6 +157,12 @@ func take_damage(amount: int):
 		is_dying = true
 		call_deferred("_die")
 
+func heal(amount: int):
+	if is_dying: return
+	health += amount
+	if health > 196:
+		health = 196
+		
 func _die():
 	if has_node("Sprite2D"):
 		$Sprite2D.hide()

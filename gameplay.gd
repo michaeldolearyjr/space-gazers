@@ -444,13 +444,15 @@ func _handle_spawning(delta: float):
 			s.speedx *= speed_multiplier
 			enemy_ships_spawned_this_level += 1
 			
-		if rand < 0.1:
+		var asteroid_prob = 0.1 * (spawn_timer / 0.5)
+		if rand < asteroid_prob:
 			var a = asteroid_template.duplicate()
 			a.show()
 			var viewport = get_viewport_rect()
 			a.global_position = Vector2(randf_range(0, viewport.size.x), -100)
 			$Enemies.add_child(a)
-			a.speedy *= speed_multiplier
+			var asteroid_speed_multiplier = 1.0 + (current_level * 0.1)
+			a.speedy *= asteroid_speed_multiplier
 			
 		if rand < 0.02:
 			var p = powerup_template.duplicate()
@@ -482,15 +484,14 @@ func spawn_player_missile(pos: Vector2, target: Vector2):
 	$Bullets.add_child(missile)
 
 func trigger_bomb(pos: Vector2):
-	# Kill all enemies on screen
-	for enemy in $Enemies.get_children():
-		if enemy != gazer_template and enemy != enemy_ship_template and enemy != asteroid_template:
-			if enemy.has_method("take_damage"):
-				enemy.take_damage(1000)
-				
-	for bullet in $EnemyBullets.get_children():
-		if bullet != red_laser_template:
-			bullet.queue_free()
+	var explosion = load("res://expanding_explosion.gd").new()
+	var vp = get_viewport_rect().size
+	explosion.max_radius = max(vp.x, vp.y) / 2.0
+	explosion.duration = 1.5
+	explosion.ring_color = Color.CYAN
+	explosion.clears_bullets = true
+	explosion.global_position = pos
+	add_child(explosion)
 
 func spawn_enemy_laser(pos: Vector2):
 	var laser = red_laser_template.duplicate()
