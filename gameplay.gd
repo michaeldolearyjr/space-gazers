@@ -31,6 +31,9 @@ var max_enemies_per_level: int = 15
 
 var is_transitioning: bool = false
 var transition_timer: float = 0.0
+var is_in_hyperspace: bool = false
+var story_ui: Control = null
+var star_systems: Array[CPUParticles2D] = []
 
 var pause_menu: CanvasLayer = null
 
@@ -49,6 +52,8 @@ func _ready() -> void:
 	
 	var global = get_node_or_null("/root/Global")
 	if global:
+		if global.level == 1 and global.score == 0:
+			_setup_hyperspace()
 		max_enemies_per_level = 15 + (global.level * 10)
 		max_enemy_ships_per_level = global.level * 1
 	
@@ -117,7 +122,7 @@ func _setup_starfield():
 
 	for i in range(3):
 		var stars = CPUParticles2D.new()
-		stars.amount = 20 * (i + 1)
+		stars.amount = 200 * (i + 1)
 		stars.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
 		var vp_size = get_viewport_rect().size
 		stars.emission_rect_extents = Vector2(vp_size.x / 2.0, 0)
@@ -143,6 +148,90 @@ func _setup_starfield():
 		stars.color_initial_ramp = grad
 		
 		add_child(stars)
+		star_systems.append(stars)
+
+func _setup_hyperspace():
+	is_in_hyperspace = true
+	
+	if is_instance_valid(player):
+		player.set_physics_process(false)
+	
+	story_ui = Control.new()
+	story_ui.set_anchors_preset(Control.PRESET_FULL_RECT)
+	$UI.add_child(story_ui)
+	
+	var dim = ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.6)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	story_ui.add_child(dim)
+	
+	var text_label = Label.new()
+	var font = load("res://assets/RetroGaming.ttf")
+	if font:
+		text_label.add_theme_font_override("font", font)
+	text_label.add_theme_font_size_override("font_size", 24)
+	text_label.text = "The earth was destroyed by the gazers, you have nothing left to lose...\n\nFly your lone spaceship into deep space to take out as many of those alien bastards as you can.\n\nGood luck."
+	text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	text_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var vp = get_viewport_rect().size
+	text_label.position = Vector2(vp.x / 2.0 - 400, vp.y / 2.0 - 200)
+	text_label.size = Vector2(800, 400)
+	story_ui.add_child(text_label)
+	
+	var press_key_label = Label.new()
+	if font:
+		press_key_label.add_theme_font_override("font", font)
+	press_key_label.add_theme_font_size_override("font_size", 18)
+	press_key_label.text = "Press Any Key to Continue"
+	press_key_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	press_key_label.position = Vector2(vp.x / 2.0 - 200, vp.y - 100)
+	press_key_label.size = Vector2(400, 30)
+	story_ui.add_child(press_key_label)
+	
+	var img = Image.create(1, 20, false, Image.FORMAT_RGBA8)
+	img.fill(Color.WHITE)
+	var strip_tex = ImageTexture.create_from_image(img)
+	
+	for stars in star_systems:
+		stars.texture = strip_tex
+		stars.scale.y = 40.0
+		
+		var grad = Gradient.new()
+		var colors = [Color.CYAN, Color.MAGENTA, Color.YELLOW, Color.GREEN, Color.RED, Color.BLUE]
+		grad.add_point(0.0, colors[randi() % colors.size()] * 1.5)
+		grad.add_point(0.5, colors[randi() % colors.size()] * 1.5)
+		grad.add_point(1.0, Color.WHITE * 2.0)
+		stars.color_initial_ramp = grad
+
+func _drop_out_of_hyperspace():
+	is_in_hyperspace = false
+	var global = get_node_or_null("/root/Global")
+	_start_level_transition(global.level if global else 1)
+	if is_instance_valid(player):
+		player.set_physics_process(true)
+		
+	if is_instance_valid(story_ui):
+		story_ui.queue_free()
+		
+	var tween = create_tween()
+	tween.set_parallel(true)
+	
+	for i in range(star_systems.size()):
+		var stars = star_systems[i]
+		
+		tween.tween_property(stars, "scale", Vector2(1, 1), 1.0).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+		
+		var grad = Gradient.new()
+		grad.add_point(0.0, Color(0.1, 0.1, 0.1))
+		grad.add_point(0.5, Color(0.4, 0.4, 0.4))
+		grad.add_point(0.9, Color(0.7, 0.7, 0.7))
+		grad.add_point(1.0, Color(1.2, 1.2, 1.0))
+		stars.color_initial_ramp = grad
+
+	await tween.finished
+	for stars in star_systems:
+		stars.texture = null
 
 func _setup_pause_menu():
 	pause_menu = CanvasLayer.new()
@@ -170,6 +259,11 @@ func _setup_pause_menu():
 	pause_menu.hide()
 
 func _input(event: InputEvent) -> void:
+	if is_in_hyperspace:
+		if (event is InputEventKey and event.pressed) or (event is InputEventMouseButton and event.pressed):
+			_drop_out_of_hyperspace()
+		return
+
 	if event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.pressed and event.keycode == KEY_P):
 		var tree = get_tree()
 		tree.paused = !tree.paused
@@ -251,6 +345,9 @@ func play_impact(pos: Vector2, target_color: Color, laser_color: Color):
 	timer.timeout.connect(particles.queue_free)
 	particles.add_child(timer)
 func _process(delta: float) -> void:
+	if is_in_hyperspace:
+		return
+
 	if is_transitioning:
 		transition_timer -= delta
 		if transition_timer <= 0.0:
