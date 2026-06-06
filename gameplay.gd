@@ -155,11 +155,16 @@ func _setup_pause_menu():
 	pause_menu.add_child(dim)
 	
 	var label = Label.new()
-	label.text = "PAUSED\nPress ESC or P to Resume"
-	label.position = Vector2(get_viewport_rect().size.x / 2.0 - 200, get_viewport_rect().size.y / 2.0 - 50)
+	label.text = "PAUSED\nPress P to Resume\nPress ESC again to return to main menu"
+	label.position = Vector2(get_viewport_rect().size.x / 2.0 - 450, get_viewport_rect().size.y / 2.0 - 100)
 	label.add_theme_font_size_override("font_size", 48)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	pause_menu.add_child(label)
+	
+	var handler = Node.new()
+	handler.set_script(load("res://pause_handler.gd"))
+	handler.set("gameplay_node", self)
+	pause_menu.add_child(handler)
 	
 	add_child(pause_menu)
 	pause_menu.hide()
