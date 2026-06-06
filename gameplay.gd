@@ -188,7 +188,11 @@ func _setup_hyperspace():
 	var vp = get_viewport_rect().size
 	text_label.position = Vector2(vp.x / 2.0 - 400, vp.y / 2.0 - 200)
 	text_label.size = Vector2(800, 400)
+	text_label.visible_ratio = 0.0
 	story_ui.add_child(text_label)
+	
+	var tween = create_tween()
+	tween.tween_property(text_label, "visible_ratio", 1.0, text_label.text.length() * 0.05)
 	
 	var press_key_label = Label.new()
 	if font:
@@ -288,6 +292,33 @@ func _input(event: InputEvent) -> void:
 		var global = get_node_or_null("/root/Global")
 		if global:
 			global.debug_hitboxes = !global.debug_hitboxes
+			
+	# Debug key to advance to the next level instantly
+	if event is InputEventKey and event.pressed and event.keycode == KEY_N:
+		if is_transitioning:
+			# Skip the transition immediately
+			transition_timer = 0.0
+		else:
+			level_timer = 0.0
+			for enemy in $Enemies.get_children():
+				if enemy != gazer_template and enemy != asteroid_template and enemy != enemy_ship_template:
+					enemy.queue_free()
+			
+			var global = get_node_or_null("/root/Global")
+			if global:
+				if is_boss_phase:
+					is_boss_phase = false
+					boss_phase_state = 0
+					global.level += 1
+					_start_level_transition(global.level)
+				else:
+					if global.level % 3 == 0:
+						is_boss_phase = true
+						boss_phase_state = 1
+						boss_wave_timer = 4.0
+					else:
+						global.level += 1
+						_start_level_transition(global.level)
 
 func play_explosion(pos: Vector2, target_color: Color = Color.ORANGE):
 	var sfx = AudioStreamPlayer2D.new()
@@ -384,13 +415,14 @@ func _process(delta: float) -> void:
 		return
 
 	var global = get_node_or_null("/root/Global")
-	if global:
+	if global and not is_boss_phase:
 		level_timer += delta
 		if level_timer >= level_duration:
 			var enemies_left = 0
 			for enemy in $Enemies.get_children():
 				if enemy != gazer_template and enemy != asteroid_template and enemy != enemy_ship_template and not enemy.is_queued_for_deletion():
-					enemies_left += 1
+					if enemy.name.find("Asteroid") == -1:
+						enemies_left += 1
 			if enemies_left == 0:
 				level_timer = 0.0
 				if global.level % 3 == 0:
@@ -411,7 +443,6 @@ func _process(delta: float) -> void:
 
 func _start_level_transition(next_level: int):
 	is_transitioning = true
-	transition_timer = 3.0
 	if not has_node("UI/TransitionLabel"):
 		var label = Label.new()
 		label.name = "TransitionLabel"
@@ -425,22 +456,30 @@ func _start_level_transition(next_level: int):
 		
 	var stories = [
 		"",
-		"My family... gone. The Earth reduced to ash.\nI can't believe I'm still alive. I must keep going.",
-		"They just keep coming. Every alien destroyed is a small measure of justice.",
-		"Their mothership was massive, but it bled just like the rest of them. I think I know where they're coming from.",
-		"The deeper I go, the more aggressive they become. My ship is holding together, but for how long?",
-		"I can see their home system in the distance. The stars here are strange, alien. It's cold.",
-		"Another mothership down. They are trying to stop me from reaching their planet.",
-		"Almost there. The gazers won't stop me. I will make them pay for what they did.",
-		"The alien homeworld. This is it. I have nothing left to lose.",
+		"Earth is gone... My family... gone.\nI can't believe I'm still alive. I must keep going!",
+		"They just keep coming... Every alien destroyed is a small measure of justice!",
+		"Their mothership was massive, but it burned just like the rest of them. I think I know where they're coming from.",
+		"The deeper I go, the more aggressive they get. My ship is holding together, but for how long?",
+		"I can see their home system in the distance. The stars here are strange...",
+		"Another mothership down. I'm so close to their planet... maybe I'll deliver a present to them!",
+		"Almost there! The gazers won't stop me! I will make them pay for what they did!",
+		"The alien homeworld... This is it! I have nothing left to lose!",
 	]
 	var story = "Incoming enemy fleet detected!"
 	if next_level >= 2 and next_level <= 9:
 		story = stories[next_level - 1]
 		
 	var lbl = $UI/TransitionLabel
-	lbl.text = "Level " + str(next_level) + "\n\n" + story
+	var full_text = "Level " + str(next_level) + "\n\n" + story
+	lbl.text = full_text
+	lbl.visible_ratio = 0.0
 	lbl.show()
+	
+	var typing_time = full_text.length() * 0.05
+	transition_timer = typing_time + 4.0 # Give comfortable reading time after typing
+	
+	var tween = create_tween()
+	tween.tween_property(lbl, "visible_ratio", 1.0, typing_time)
 
 func _handle_boss_phase(delta: float):
 	boss_wave_timer -= delta
@@ -462,7 +501,7 @@ func _handle_boss_phase(delta: float):
 				p.show()
 				var vp = get_viewport_rect().size
 				p.global_position = Vector2(randf_range(0, vp.x), -50)
-				p.type = "missile" if randf() < 0.7 else (["health", "rapid", "bomb"][randi() % 3])
+				p.type = "missile" if randf() < 0.7 else (["health", "rapid"][randi() % 2])
 				$Powerups.add_child(p)
 	elif boss_phase_state == 2:
 		if boss_wave_timer <= 0:
@@ -506,7 +545,7 @@ func _handle_ending_cutscene(delta: float):
 			ending_timer = 5.0
 			alien_planet_sprite = Sprite2D.new()
 			var img = Image.new()
-			var err = img.load("res://assets/images/alienplanet.jpg")
+			var err = img.load("res://assets/images/alienplanet.png")
 			if err == OK:
 				alien_planet_sprite.texture = ImageTexture.create_from_image(img)
 			else:
@@ -521,6 +560,7 @@ func _handle_ending_cutscene(delta: float):
 			alien_planet_sprite.scale = Vector2(target_scale, target_scale)
 			alien_planet_sprite.position = Vector2(vp.x / 2.0, -vp.y / 2.0)
 			alien_planet_sprite.z_index = -50
+			alien_planet_sprite.light_mask = 0
 			add_child(alien_planet_sprite)
 			
 			var tween = create_tween()
@@ -597,7 +637,11 @@ func _show_ending_screen():
 	if has_bomb:
 		text_label.text = "CONGRATULATIONS!\n\nYou reached the alien homeworld and delivered the ultimate payload. The planet is destroyed, and Earth is avenged.\n\nYou have beaten the game!"
 	else:
-		text_label.text = "CONGRATULATIONS!\n\nYou survived the journey and reached the alien homeworld... but without a bomb, their planet remains a threat.\n\nYou have beaten the game!\n\nTeaser: Prepare for the sequel on the alien surface!"
+		text_label.text = "CONGRATULATIONS!\n\nYou survived the journey and reached the alien homeworld...\n\nYou have beaten the game!"
+		
+	text_label.visible_ratio = 0.0
+	var tween = create_tween()
+	tween.tween_property(text_label, "visible_ratio", 1.0, text_label.text.length() * 0.05)
 		
 	var global = get_node_or_null("/root/Global")
 	if global:
@@ -720,7 +764,7 @@ func trigger_bomb(pos: Vector2):
 	explosion.ring_color = Color.CYAN
 	explosion.clears_bullets = true
 	explosion.global_position = pos
-	add_child(explosion)
+	call_deferred("add_child", explosion)
 
 func spawn_enemy_laser(pos: Vector2):
 	var laser = red_laser_template.duplicate()

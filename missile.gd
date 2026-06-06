@@ -43,7 +43,7 @@ func explode():
 	explosion.ring_color = Color.GREEN
 	explosion.clears_bullets = false
 	explosion.global_position = global_position
-	get_parent().add_child(explosion)
+	get_parent().call_deferred("add_child", explosion)
 	queue_free()
 
 func _draw() -> void:
