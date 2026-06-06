@@ -3,7 +3,8 @@ extends CharacterBody2D
 const SPEED = 600.0
 const FRICTION = 4.0
 
-var health: int = 196
+var health: float = 196.0
+var healing_pool: float = 0.0
 var missiles_ammo: int = 0
 var bombs_ammo: int = 0
 var rapid_fire_ammo: int = 0
@@ -61,6 +62,19 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if is_dying: return
+	
+	if healing_pool > 0.0 and health < 196.0:
+		var heal_rate = 50.0
+		var amount = heal_rate * delta
+		if amount > healing_pool:
+			amount = healing_pool
+		if health + amount > 196.0:
+			amount = 196.0 - health
+		
+		health += amount
+		healing_pool -= amount
+	elif healing_pool > 0.0 and health >= 196.0:
+		healing_pool = 0.0
 	
 	if hit_timer > 0:
 		hit_timer -= delta
@@ -157,11 +171,9 @@ func take_damage(amount: int):
 		is_dying = true
 		call_deferred("_die")
 
-func heal(amount: int):
+func heal(amount: float):
 	if is_dying: return
-	health += amount
-	if health > 196:
-		health = 196
+	healing_pool += amount
 		
 func _die():
 	if has_node("Sprite2D"):
