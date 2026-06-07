@@ -56,11 +56,20 @@ func _process(delta: float) -> void:
 
 func _on_body_entered(body: Node2D):
 	if body.name == "Player":
+		var score_to_add = 25000
+		
 		if type == "health":
-			if body.has_method("heal"):
-				body.heal(196)
+			var is_full_health = false
+			if "health" in body and body.health >= 196.0:
+				is_full_health = true
+				
+			if is_full_health:
+				score_to_add = 10000000
 			else:
-				body.health = min(body.health + 196, 196)
+				if body.has_method("heal"):
+					body.heal(196)
+				else:
+					body.health = min(body.health + 196, 196)
 		elif type == "rapid":
 			body.rapid_fire_ammo += 50
 		elif type == "missile":
@@ -70,6 +79,6 @@ func _on_body_entered(body: Node2D):
 			
 		var global = get_node_or_null("/root/Global")
 		if global:
-			global.add_score(25000)
+			global.add_score(score_to_add)
 			
 		queue_free()
