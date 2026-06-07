@@ -37,8 +37,8 @@ var star_systems: Array[CPUParticles2D] = []
 
 var pause_menu: CanvasLayer = null
 
-var boss_template = preload("res://boss.tscn")
-var boss_orb_template = preload("res://boss_orb.tscn")
+var boss_template = preload("res://src/entities/enemies/boss.tscn")
+var boss_orb_template = preload("res://src/entities/enemies/boss_orb.tscn")
 var is_boss_phase: bool = false
 var boss_phase_state: int = 0
 var boss_wave_timer: float = 0.0
@@ -266,7 +266,7 @@ func _setup_pause_menu():
 	pause_menu.add_child(label)
 	
 	var handler = Node.new()
-	handler.set_script(load("res://pause_handler.gd"))
+	handler.set_script(load("res://src/ui/pause_handler.gd"))
 	handler.set("gameplay_node", self)
 	pause_menu.add_child(handler)
 	
@@ -281,7 +281,7 @@ func _input(event: InputEvent) -> void:
 
 	if ending_state == 5:
 		if (event is InputEventKey and event.pressed) or (event is InputEventMouseButton and event.pressed):
-			get_tree().change_scene_to_file("res://main_menu.tscn")
+			get_tree().change_scene_to_file("res://src/ui/main_menu.tscn")
 		return
 
 	if event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.pressed and event.keycode == KEY_P):
@@ -757,7 +757,7 @@ func spawn_player_missile(pos: Vector2, target: Vector2):
 	$Bullets.add_child(missile)
 
 func trigger_bomb(pos: Vector2):
-	var explosion = load("res://expanding_explosion.gd").new()
+	var explosion = load("res://src/effects/expanding_explosion.gd").new()
 	var vp = get_viewport_rect().size
 	explosion.max_radius = max(vp.x, vp.y) / 2.0
 	explosion.duration = 1.5

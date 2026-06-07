@@ -1,9 +1,8 @@
 [gd_scene load_steps=3 format=3]
-
-[ext_resource type="Script" path="res://main_menu.gd" id="1_xxx"]
+[ext_resource type="Script" path="res://src/ui/game_over.gd" id="1_xxx"]
 [ext_resource type="FontFile" path="res://assets/RetroGaming.ttf" id="2_yyy"]
 
-[node name="MainMenu" type="Control"]
+[node name="GameOver" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -15,7 +14,7 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0, 0, 0, 1)
+color = Color(0.2, 0, 0, 1)
 
 [node name="Title" type="Label" parent="."]
 layout_mode = 1
@@ -24,16 +23,16 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -400.0
+offset_left = -200.0
 offset_top = -100.0
-offset_right = 400.0
+offset_right = 200.0
 offset_bottom = -20.0
 theme_override_fonts/font = ExtResource("2_yyy")
 theme_override_font_sizes/font_size = 64
-text = "Space Gazers"
+text = "GAME OVER"
 horizontal_alignment = 1
 
-[node name="PressAnyKey" type="Label" parent="."]
+[node name="Score" type="Label" parent="."]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -41,29 +40,15 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -200.0
-offset_top = 20.0
+offset_top = 10.0
 offset_right = 200.0
-offset_bottom = 60.0
+offset_bottom = 50.0
 theme_override_fonts/font = ExtResource("2_yyy")
-theme_override_font_sizes/font_size = 24
-text = "Press Any Key to Start"
+theme_override_font_sizes/font_size = 32
+text = "Score: 0"
 horizontal_alignment = 1
 
-[node name="HighScore" type="Label" parent="."]
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -200.0
-offset_top = 50.0
-offset_right = 200.0
-offset_bottom = 90.0
-theme_override_fonts/font = ExtResource("2_yyy")
-theme_override_font_sizes/font_size = 24
-text = "High Score: 0"
-horizontal_alignment = 1
-
-[node name="Controls" type="Label" parent="."]
+[node name="PressAnyKey" type="Label" parent="."]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -71,15 +56,10 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -300.0
-offset_top = -150.0
+offset_top = -100.0
 offset_right = 300.0
-offset_bottom = -20.0
+offset_bottom = -50.0
 theme_override_fonts/font = ExtResource("2_yyy")
-theme_override_font_sizes/font_size = 18
-text = "Controls:
-WASD / Arrows - Move
-Left Click - Fire Laser
-Shift + Left Click - Rapid Fire
-Right Click - Fire Missiles
-Shift + Right Click - Fire Bomb"
+theme_override_font_sizes/font_size = 24
+text = "Press Any Key to Return to Menu"
 horizontal_alignment = 1

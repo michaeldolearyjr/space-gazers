@@ -11,10 +11,10 @@ func _input(event: InputEvent) -> void:
 		if global:
 			global.score = 0
 			global.level = 1
-		get_tree().change_scene_to_file("res://main_menu.tscn")
+		get_tree().change_scene_to_file("res://src/ui/main_menu.tscn")
 	elif event is InputEventMouseButton and event.pressed:
 		var global = get_node_or_null("/root/Global")
 		if global:
 			global.score = 0
 			global.level = 1
-		get_tree().change_scene_to_file("res://main_menu.tscn")
+		get_tree().change_scene_to_file("res://src/ui/main_menu.tscn")

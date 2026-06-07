@@ -206,4 +206,4 @@ func _die():
 		await get_tree().create_timer(13.0, true, false, true).timeout
 		
 	Engine.time_scale = 1.0
-	get_tree().change_scene_to_file("res://game_over.tscn")
+	get_tree().change_scene_to_file("res://src/ui/game_over.tscn")

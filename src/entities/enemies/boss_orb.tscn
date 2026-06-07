@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b0ss0rb111111"]
 
-[ext_resource type="Script" path="res://boss_orb.gd" id="1_bossorb"]
+[ext_resource type="Script" path="res://src/entities/enemies/boss_orb.gd" id="1_bossorb"]
 
 [node name="BossOrb" type="Area2D"]
 script = ExtResource("1_bossorb")

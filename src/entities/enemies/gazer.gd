@@ -23,7 +23,7 @@ func _ready() -> void:
 	outer.name = "OuterHitbox"
 	outer.collision_layer = 2
 	outer.collision_mask = 0
-	outer.set_script(preload("res://outer_hitbox.gd"))
+	outer.set_script(preload("res://src/effects/outer_hitbox.gd"))
 	var outer_shape = CollisionShape2D.new()
 	var outer_circle = CircleShape2D.new()
 	outer_circle.radius = 20.0

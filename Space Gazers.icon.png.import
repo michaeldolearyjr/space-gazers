@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bodmquogfj1xc"
-path="res://.godot/imported/gazer.png-2cb80adb1c579471f27989611f752bfd.ctex"
+uid="uid://b3igj6tg0g8je"
+path="res://.godot/imported/Space Gazers.icon.png-2a4861a5ddb3ccab06532269664f2f70.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://gazer.png"
-dest_files=["res://.godot/imported/gazer.png-2cb80adb1c579471f27989611f752bfd.ctex"]
+source_file="res://Space Gazers.icon.png"
+dest_files=["res://.godot/imported/Space Gazers.icon.png-2a4861a5ddb3ccab06532269664f2f70.ctex"]
 
 [params]
 

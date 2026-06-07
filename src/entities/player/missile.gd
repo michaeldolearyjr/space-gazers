@@ -37,7 +37,7 @@ func _on_area_entered(area: Area2D):
 		explode()
 
 func explode():
-	var explosion = load("res://expanding_explosion.gd").new()
+	var explosion = load("res://src/effects/expanding_explosion.gd").new()
 	explosion.max_radius = 250.0
 	explosion.duration = 0.4
 	explosion.ring_color = Color.GREEN

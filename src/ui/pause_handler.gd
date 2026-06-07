@@ -11,7 +11,7 @@ func _input(event: InputEvent) -> void:
 		if get_viewport():
 			get_viewport().set_input_as_handled()
 		tree.paused = false
-		tree.change_scene_to_file("res://main_menu.tscn")
+		tree.change_scene_to_file("res://src/ui/main_menu.tscn")
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_P:
 		if get_viewport():
 			get_viewport().set_input_as_handled()
